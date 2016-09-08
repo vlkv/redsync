@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/garyburd/redigo/redis"
+	log "github.com/Sirupsen/logrus"
 )
 
 // A Mutex is a distributed mutual exclusion lock.
@@ -111,6 +112,9 @@ func (m *Mutex) acquire(pool Pool, value string) bool {
 	conn := pool.Get()
 	defer conn.Close()
 	reply, err := redis.String(conn.Do("SET", m.name, value, "NX", "PX", int(m.expiry/time.Millisecond)))
+	if err != nil {
+		log.Errorf("acquire failed, redis reply=%v, err=%v", reply, err)
+	}
 	return err == nil && reply == "OK"
 }
 
